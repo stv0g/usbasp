@@ -17,6 +17,7 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <avr/wdt.h>
+#include <util/delay.h>
 
 #include "usbasp.h"
 #include "usbdrv.h"
@@ -301,30 +302,21 @@ uchar usbFunctionWrite(uchar *data, uchar len) {
 }
 
 void hardwareInit(void) {
-	/* no pullups on USB and ISP pins */
-	PORTD = 0;
-	PORTB = 0;
+int i;
 
-	/* all outputs except PD2 = INT0 */
-	DDRD = ~(1 << 2);
-
-	/* output SE0 for USB reset */
-	DDRB = ~0;
-	j = 0;
+/* no pullups on USB and ISP pins */
+	DDRB = DDRC = DDRD = 0xff;
+	PORTB = PORTC = PORTD = 0xff;
 
 	/* USB Reset by device only required on Watchdog Reset */
-	while (--j) {
-		i = 0;
-		/* delay >10ms for USB reset */
-		while (--i)
-			;
+	usbDeviceDisconnect();
+	for(i = 0; i < 500; i++) {
+		_delay_ms(1);
 	}
-
-	/* all USB and ISP pins inputs */
-	DDRB = 0;
+	usbDeviceConnect();
 
 	/* all inputs except PC0, PC1 */
-	DDRC = 0x03;
+	DDRC |= 0x03;
 	ledGreenOn();
 	ledRedOff();
 
@@ -333,8 +325,6 @@ void hardwareInit(void) {
 }
 
 int main(void) {
-	uchar i, j;
-
 	/* init ports */
 	hardwareInit();
 
