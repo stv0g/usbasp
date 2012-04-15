@@ -44,7 +44,7 @@ uchar usbFunctionSetup(uchar data[8]) {
 	if (data[1] == USBASP_FUNC_CONNECT) {
 
 		/* set SCK speed */
-		if ((PINC & (1 << PC2)) == 0) {
+		if ((SLOW_SCK_PIN & (1 << SLOW_SCK_NUM)) == 0) {
 			ispSetSCKOption(USBASP_ISP_SCK_8);
 		} else {
 			ispSetSCKOption(prog_sck);
@@ -144,7 +144,7 @@ uchar usbFunctionSetup(uchar data[8]) {
 
 		clockWait(16);
 		tpi_init();
-	
+
 	} else if (data[1] == USBASP_FUNC_TPI_DISCONNECT) {
 
 		tpi_send_byte(TPI_OP_SSTCS(TPISR));
@@ -164,26 +164,26 @@ uchar usbFunctionSetup(uchar data[8]) {
 		ISP_OUT &= ~((1 << ISP_RST) | (1 << ISP_SCK) | (1 << ISP_MOSI));
 
 		ledRedOff();
-	
+
 	} else if (data[1] == USBASP_FUNC_TPI_RAWREAD) {
 		replyBuffer[0] = tpi_recv_byte();
 		len = 1;
-	
+
 	} else if (data[1] == USBASP_FUNC_TPI_RAWWRITE) {
 		tpi_send_byte(data[2]);
-	
+
 	} else if (data[1] == USBASP_FUNC_TPI_READBLOCK) {
 		prog_address = (data[3] << 8) | data[2];
 		prog_nbytes = (data[7] << 8) | data[6];
 		prog_state = PROG_STATE_TPI_READ;
 		len = 0xff; /* multiple in */
-	
+
 	} else if (data[1] == USBASP_FUNC_TPI_WRITEBLOCK) {
 		prog_address = (data[3] << 8) | data[2];
 		prog_nbytes = (data[7] << 8) | data[6];
 		prog_state = PROG_STATE_TPI_WRITE;
 		len = 0xff; /* multiple out */
-	
+
 	} else if (data[1] == USBASP_FUNC_GETCAPABILITIES) {
 		replyBuffer[0] = USBASP_CAP_0_TPI;
 		replyBuffer[1] = 0;
@@ -300,18 +300,18 @@ uchar usbFunctionWrite(uchar *data, uchar len) {
 	return retVal;
 }
 
-int main(void) {
-	uchar i, j;
-
+void hardwareInit(void) {
 	/* no pullups on USB and ISP pins */
 	PORTD = 0;
 	PORTB = 0;
+
 	/* all outputs except PD2 = INT0 */
 	DDRD = ~(1 << 2);
 
 	/* output SE0 for USB reset */
 	DDRB = ~0;
 	j = 0;
+
 	/* USB Reset by device only required on Watchdog Reset */
 	while (--j) {
 		i = 0;
@@ -319,6 +319,7 @@ int main(void) {
 		while (--i)
 			;
 	}
+
 	/* all USB and ISP pins inputs */
 	DDRB = 0;
 
@@ -327,15 +328,30 @@ int main(void) {
 	ledGreenOn();
 	ledRedOff();
 
+	/* enable pull up on jumper */
+	SLOW_SCK_PORT |= (1 << SLOW_SCK_NUM);
+}
+
+int main(void) {
+	uchar i, j;
+
+	/* init ports */
+	hardwareInit();
+
 	/* init timer */
 	clockInit();
 
 	/* main event loop */
 	usbInit();
+
+	/* start interrupts for USB */
 	sei();
+
+	/* main loop */
 	for (;;) {
 		usbPoll();
 	}
+
 	return 0;
 }
 

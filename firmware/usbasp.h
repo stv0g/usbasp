@@ -67,4 +67,8 @@
 #define ledGreenOn()  PORTC &= ~(1 << PC0)
 #define ledGreenOff() PORTC |= (1 << PC0)
 
+#define SLOW_SCK_PORT PORTC
+#define SLOW_SCK_PIN  PINC
+#define SLOW_SCK_NUM  PC2
+
 #endif /* USBASP_H_ */
