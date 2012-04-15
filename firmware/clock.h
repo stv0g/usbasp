@@ -11,9 +11,13 @@
 #ifndef __clock_h_included__
 #define	__clock_h_included__
 
-#define F_CPU           12000000L   /* 12MHz */
+#ifndef F_CPU /* should be defined in Makefile */
+#define F_CPU           16000000L   /* 16MHz */
+#endif
+
 #define TIMERVALUE      TCNT0
-#define CLOCK_T_320us	60
+#define CLOCK_T_320us	(320e-6*F_CPU/64) /* prescaler is 64 as defined below */
+
 
 #ifdef __AVR_ATmega8__
 #define TCCR0B  TCCR0

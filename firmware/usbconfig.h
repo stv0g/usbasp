@@ -35,7 +35,7 @@ the newest features and options.
  * This may be any bit in the port. Please note that D+ must also be connected
  * to interrupt pin INT0!
  */
-#define USB_CFG_CLOCK_KHZ 12000
+#define USB_CFG_CLOCK_KHZ (F_CPU/1000)
 /* Clock rate of the AVR in MHz. Legal values are 12000, 16000 or 16500.
  * The 16.5 MHz version of the code requires no crystal, it tolerates +/- 1%
  * deviation from the nominal frequency. All other rates require a precision
