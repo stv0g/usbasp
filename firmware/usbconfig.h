@@ -110,6 +110,22 @@ the newest features and options.
  * usbdrv.h.
  */
 
+/* Visual feedback of successful enumeration */
+#ifndef __ASSEMBLER__
+extern void usbHadReset();
+extern void usbAddressAssigned();
+#endif
+
+#define USB_RESET_HOOK(resetStarts) if(!resetStarts) { usbHadReset(); }
+/* This macro is a hook if you need to know when an USB RESET occurs. It has
+* one parameter which distinguishes between the start of RESET state and its
+* end.
+*/
+#define USB_SET_ADDRESS_HOOK() usbAddressAssigned();
+/* This macro (if defined) is executed when a USB SET_ADDRESS request was
+* received.
+*/
+
 /* -------------------------- Device Description --------------------------- */
 
 #define  USB_CFG_VENDOR_ID  0xc0, 0x16  /* 5824 in dec, stands for VOTI */
