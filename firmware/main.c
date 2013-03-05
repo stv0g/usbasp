@@ -302,21 +302,21 @@ uchar usbFunctionWrite(uchar *data, uchar len) {
 }
 
 void hardwareInit(void) {
-int i;
 
-/* no pullups on USB and ISP pins */
-	DDRB = DDRC = DDRD = 0xff;
-	PORTB = PORTC = PORTD = 0xff;
+	uchar i;
 
-	/* USB Reset by device only required on Watchdog Reset */
-	usbDeviceDisconnect();
-	for(i = 0; i < 500; i++) {
+	PORTC |= (1 << PC0) | (1 << PC1); /* LEDs off */
+
+	usbDeviceDisconnect();  /* enforce re-enumeration, do this while interrupts are disabled! */
+	i = 0;
+	while(--i){             /* fake USB disconnect for > 250 ms */
+		wdt_reset();
 		_delay_ms(1);
 	}
 	usbDeviceConnect();
 
 	/* all inputs except PC0, PC1 */
-	DDRC |= 0x03;
+	DDRC = 0x03;
 
 	/* enable pull up on jumper */
 	SLOW_SCK_PORT |= (1 << SLOW_SCK_NUM);
@@ -331,14 +331,13 @@ void usbAddressAssigned() {
 }
 
 int main(void) {
+	usbInit();
+
 	/* init ports */
 	hardwareInit();
 
 	/* init timer */
 	clockInit();
-
-	/* main event loop */
-	usbInit();
 
 	/* start interrupts for USB */
 	sei();
